@@ -41,8 +41,8 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-auto WindowWidth = 533;
-auto WindowHeight = 400;
+auto WindowWidth = 550;
+auto WindowHeight = 330;
 
 void GUI::Init()
 {
@@ -55,7 +55,7 @@ void GUI::Init()
     RegisterClass(&wc);
 
     wchar_t buffer[67];
-    swprintf_s(buffer, VersionInfo.EngineVersion >= 5.0 ? L"Erbium (FN %.2f, UE %.1f)" : (VersionInfo.FortniteVersion >= 5.00 || VersionInfo.FortniteVersion < 1.2 ? L"Erbium (FN %.2f, UE %.2f)" : L"Erbium (FN %.1f, UE %.2f)"), VersionInfo.FortniteVersion, VersionInfo.EngineVersion);
+    swprintf_s(buffer, VersionInfo.EngineVersion >= 5.0 ? L"(FN %.2f, UE %.1f)" : (VersionInfo.FortniteVersion >= 5.00 || VersionInfo.FortniteVersion < 1.2 ? L"Erbium (FN %.2f, UE %.2f)" : L"Erbium (FN %.1f, UE %.2f)"), VersionInfo.FortniteVersion, VersionInfo.EngineVersion);
     auto hWnd = CreateWindow(wc.lpszClassName, buffer, WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_THICKFRAME, 100, 100, (int)(WindowWidth * main_scale), (int)(WindowHeight * main_scale), nullptr, nullptr, nullptr, nullptr);
 
     IDXGISwapChain* g_pSwapChain = nullptr;
@@ -120,7 +120,7 @@ void GUI::Init()
     ImGui::GetIO().Fonts->AddFontFromMemoryTTF((void*)font, sizeof(font), 17.f, &FontConfig);
 
     auto& mStyle = ImGui::GetStyle();
-    mStyle.WindowRounding = 0.f;
+    mStyle.WindowRounding = 8.f;
     mStyle.ItemSpacing = ImVec2(20, 6);
     mStyle.ItemInnerSpacing = ImVec2(8, 4);
     mStyle.FrameRounding = 4.5f;
@@ -131,29 +131,44 @@ void GUI::Init()
     mStyle.ChildRounding = 8.f;
 
     ImGuiStyle& style = mStyle;
-    style.Colors[ImGuiCol_Text] = ImVec4(0.85f, 0.95f, 0.90f, 0.80f);
-    style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.85f, 0.95f, 0.90f, 0.30f);
-    style.Colors[ImGuiCol_TitleBg] = ImVec4(0.29f, 0.29f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.20f, 0.22f, 0.27f, 0.75f);
-    style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.29f, 0.29f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.29f, 0.29f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.43f, 0.43f, 0.43f, 0.85f);
-    style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.46f, 0.46f, 0.46f, 1.00f);
-    style.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.20f, 0.22f, 0.27f, 0.47f);
-    style.Colors[ImGuiCol_CheckMark] = ImVec4(0.67f, 0.67f, 0.67f, 1.00f);
-    style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.20f, 0.20f, 0.20f, 0.67f);
-    style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
-    style.Colors[ImGuiCol_Button] = ImVec4(0.25f, 0.25f, 0.25f, 0.75f);
-    style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.43f, 0.43f, 0.43f, 0.85f);
-    style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.46f, 0.46f, 0.46f, 1.00f);
-    style.Colors[ImGuiCol_Header] = ImVec4(0.92f, 0.18f, 0.29f, 0.76f);
-    style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.92f, 0.18f, 0.29f, 0.86f);
-    style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.92f, 0.18f, 0.29f, 0.43f);
-    style.Colors[ImGuiCol_PopupBg] = ImVec4(0.20f, 0.22f, 0.27f, 0.9f);
-    style.Colors[ImGuiCol_Tab] = ImVec4(0.25f, 0.25f, 0.25f, 1.0f);
-    style.Colors[ImGuiCol_TabSelected] = ImVec4(0.29f, 0.29f, 0.29f, 1.0f);
-    style.Colors[ImGuiCol_TabHovered] = ImVec4(0.32f, 0.32f, 0.32f, 1.0f);
+    // text
+    style.Colors[ImGuiCol_Text] = ImVec4(0.88f, 0.88f, 0.92f, 1.00f);
+    style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.55f, 1.00f);
+
+    // window / title
+    style.Colors[ImGuiCol_TitleBg] = ImVec4(0.18f, 0.18f, 0.22f, 1.00f);
+    style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.22f, 0.20f, 0.28f, 1.00f);
+    style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.15f, 0.15f, 0.18f, 0.75f);
+
+    // frames
+    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.20f, 0.20f, 0.24f, 1.00f);
+    style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.32f, 0.28f, 0.40f, 0.85f);
+    style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.42f, 0.34f, 0.55f, 1.00f);
+
+    // buttons
+    style.Colors[ImGuiCol_Button] = ImVec4(0.22f, 0.22f, 0.26f, 1.00f);
+    style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.36f, 0.30f, 0.48f, 0.90f);
+    style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.48f, 0.38f, 0.65f, 1.00f);
+
+    // sliders / checks
+    style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.55f, 0.45f, 0.75f, 0.85f);
+    style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.65f, 0.52f, 0.90f, 1.00f);
+    style.Colors[ImGuiCol_CheckMark] = ImVec4(0.70f, 0.55f, 0.95f, 1.00f);
+
+    // headers (tree nodes, selectable, etc)
+    style.Colors[ImGuiCol_Header] = ImVec4(0.45f, 0.35f, 0.65f, 0.75f);
+    style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.55f, 0.45f, 0.80f, 0.85f);
+    style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.60f, 0.50f, 0.90f, 1.00f);
+
+    // selection / popup
+    style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.55f, 0.40f, 0.85f, 0.45f);
+    style.Colors[ImGuiCol_PopupBg] = ImVec4(0.14f, 0.14f, 0.18f, 0.95f);
+
+    // tabs
+    style.Colors[ImGuiCol_Tab] = ImVec4(0.20f, 0.20f, 0.25f, 1.00f);
+    style.Colors[ImGuiCol_TabHovered] = ImVec4(0.40f, 0.32f, 0.55f, 1.00f);
+    style.Colors[ImGuiCol_TabSelected] = ImVec4(0.28f, 0.24f, 0.38f, 1.00f);
+
     //ImGui::StyleColorsDark();
 
     //ImGuiStyle& style = ImGui::GetStyle();
@@ -209,7 +224,22 @@ void GUI::Init()
         ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
         ImGui::SetNextWindowSize(ImVec2(WindowWidth * main_scale, WindowHeight * main_scale), ImGuiCond_Always);
 
-        ImGui::Begin("Erbium", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+        ImGui::Begin("##Erbium", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+        // subtle dark gray -> purple gradient background
+        ImDrawList* draw = ImGui::GetWindowDrawList();
+        ImVec2 p0 = ImGui::GetWindowPos();
+        ImVec2 p1 = ImVec2(p0.x + ImGui::GetWindowWidth(),
+            p0.y + ImGui::GetWindowHeight());
+
+        ImU32 top = ImGui::ColorConvertFloat4ToU32(ImVec4(0.13f, 0.13f, 0.16f, 1.0f));
+        ImU32 bottom = ImGui::ColorConvertFloat4ToU32(ImVec4(0.20f, 0.16f, 0.30f, 1.0f));
+
+        draw->AddRectFilledMultiColor(
+            p0, p1,
+            top, top,
+            bottom, bottom
+        );
+
 
         int SelectedUI = 0;
         int hasEvent = 0;
@@ -227,41 +257,58 @@ void GUI::Init()
         }
         if (ImGui::BeginTabBar(""))
         {
-            if (ImGui::BeginTabItem("Main"))
+            // always visible
+            if (ImGui::BeginTabItem("Erbium"))
             {
                 SelectedUI = 0;
                 ImGui::EndTabItem();
             }
-
-            if (gsStatus == StartedMatch)
-            {
-                if (ImGui::BeginTabItem("Zones"))
-                {
-                    SelectedUI = 1;
-                    ImGui::EndTabItem();
-                }
-
-                if (hasEvent == 2 && ImGui::BeginTabItem("Events"))
-                {
-                    SelectedUI = 2;
-                    ImGui::EndTabItem();
-                }
-            }
-
-            if (ImGui::BeginTabItem("Dump"))
-            {
-                SelectedUI = 4;
-                ImGui::EndTabItem();
-            }
-
-            if (ImGui::BeginTabItem("Misc"))
+            if (ImGui::BeginTabItem("Other"))
             {
                 SelectedUI = 3;
                 ImGui::EndTabItem();
+			}
+
+            // only after launching is done
+            if (gsStatus != NotReady)
+            {
+                if (gsStatus == StartedMatch)
+                {
+                    if (ImGui::BeginTabItem("Zone"))
+                    {
+                        SelectedUI = 1;
+                        ImGui::EndTabItem();
+                    }
+
+                    if (hasEvent == 2 && ImGui::BeginTabItem("Events"))
+                    {
+                        SelectedUI = 2;
+                        ImGui::EndTabItem();
+                    }
+                }
+
+
+                if (ImGui::BeginTabItem("Dump"))
+                {
+                    SelectedUI = 4;
+                    ImGui::EndTabItem();
+                
+                }
+
+
+                if (FConfiguration::bLateGame)
+                {
+                    if (ImGui::BeginTabItem("LG"))
+                    {
+                        SelectedUI = 5;
+                        ImGui::EndTabItem();
+                    }
+                }
             }
 
             ImGui::EndTabBar();
         }
+
 
         static char commandBuffer[1024] = { 0 };
         auto GameMode = UWorld::GetWorld() ? (AFortGameMode*)UWorld::GetWorld()->AuthorityGameMode : nullptr;
@@ -269,12 +316,26 @@ void GUI::Init()
         {
         case 0:
             if (gsStatus >= Joinable)
-                ImGui::BeginChild("ServerInfo", ImVec2(245 * main_scale, 130 * main_scale), ImGuiChildFlags_Borders/*, ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_AlwaysHorizontallScrollbar */);
-            ImGui::Text((std::string("Status: ") + (gsStatus == NotReady ? "Setting up the server..." : (gsStatus == Joinable ? "Joinable!" : "Match Started"))).c_str());
+                ImGui::BeginChild("ServerInfo", ImVec2(245 * main_scale, 110 * main_scale), ImGuiChildFlags_Borders/*, ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_AlwaysHorizontallScrollbar */);
+            if (gsStatus == NotReady)
+            {
+                static float dotTimer = 0.0f;
+                dotTimer += ImGui::GetIO().DeltaTime;
+
+                int dots = ((int)(dotTimer * 5.0f)) % 4; // 0–3 dots
+                std::string anim = "Launching";
+                anim.append(dots, '.');
+
+                ImGui::Text(("Status: " + anim).c_str());
+            }
+            else
+            {
+                ImGui::Text((std::string("Status: ") + (gsStatus == Joinable ? "Joinable!" : "Match Started")).c_str());
+            }
+
             if (gsStatus >= Joinable)
             {
-                ImGui::Text((std::string("Player Count: ") + std::to_string(GameMode->AlivePlayers.Num())).c_str());
-                ImGui::Text((std::string("Port: ") + std::to_string(FConfiguration::Port)).c_str());
+                ImGui::Text((std::string("Players: ") + std::to_string(GameMode->AlivePlayers.Num())).c_str());
 
                 auto Playlist = VersionInfo.FortniteVersion >= 3.5 && GameMode->HasWarmupRequiredPlayerCount() ? (GameMode->GameState->HasCurrentPlaylistInfo() ? GameMode->GameState->CurrentPlaylistInfo.BasePlaylist : GameMode->GameState->CurrentPlaylistData) : nullptr;
 
@@ -283,7 +344,7 @@ void GUI::Init()
                     FString Name = UKismetTextLibrary::Conv_TextToString(Playlist->UIDisplayName);
                     ImGui::Text((UEAllocatedString("Playlist: ") + Name.ToString()).c_str());
                 }
-                ImGui::Text((std::string("Running for ") + std::to_string((int)floor(UGameplayStatics::GetTimeSeconds(GameMode))) + "s").c_str());
+                ImGui::Text((std::string("") + std::to_string((int)floor(UGameplayStatics::GetTimeSeconds(GameMode))) + "s Elapsed").c_str());
             }
             if (gsStatus >= Joinable)
             {
@@ -294,7 +355,7 @@ void GUI::Init()
             if (gsStatus <= Joinable)
                 ImGui::Checkbox("Lategame", &FConfiguration::bLateGame);
 
-            if (gsStatus == Joinable && ImGui::Button("Start Bus Early"))
+            if (gsStatus == Joinable && ImGui::Button("Start Bus"))
             {
                 if (UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetDefaultObj())
                 {
@@ -307,9 +368,23 @@ void GUI::Init()
                     UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), FString(L"startaircraft"), nullptr);
             }
 
-            ImGui::InputText("Console Command", commandBuffer, 1024);
+            ImGui::SetNextItemWidth(220 * main_scale);
+            ImGui::InputText("##ConsoleCmd", commandBuffer, 1024);
+
+            ImGui::SameLine();
 
             if (ImGui::Button("Execute"))
+            {
+                std::string str = commandBuffer;
+                auto wstr = std::wstring(str.begin(), str.end());
+
+                UKismetSystemLibrary::ExecuteConsoleCommand(
+                    UWorld::GetWorld(),
+                    FString(wstr.c_str()),
+                    nullptr
+                );
+            }
+
             {
                 std::string str = commandBuffer;
                 auto wstr = std::wstring(str.begin(), str.end());
@@ -358,7 +433,7 @@ void GUI::Init()
                 // UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), FString(L"skipsafezone"), nullptr);
             }
 
-            if (ImGui::Button("Start Shrinking Safe Zone"))
+            if (ImGui::Button("Start Zone closing"))
             {
                 if (GameMode->HasSafeZoneIndicator())
                 {
@@ -383,17 +458,17 @@ void GUI::Init()
 
             break;
         case 3:
-            ImGui::Checkbox("Infinite Materials", &FConfiguration::bInfiniteMats);
+            ImGui::Checkbox("Infinite Mats", &FConfiguration::bInfiniteMats);
             ImGui::Checkbox("Infinite Ammo", &FConfiguration::bInfiniteAmmo);
             ImGui::Checkbox("Keep Inventory", &FConfiguration::bKeepInventory);
 
-            ImGui::SliderInt("Siphon Amount:", &FConfiguration::SiphonAmount, 0, 200);
-            ImGui::SliderInt("Tick Rate:", &FConfiguration::MaxTickRate, 30, 120);
+            ImGui::SliderInt("Siphon Amount:", &FConfiguration::SiphonAmount, 50, 200);
+            ImGui::SliderInt("Tick Rate:", &FConfiguration::MaxTickRate, 30, 360);
 
             if (ImGui::Button("Reset Builds"))
             {
-				TArray<ABuildingSMActor*> Builds;
-				Utils::GetAll<ABuildingSMActor>(Builds);
+                TArray<ABuildingSMActor*> Builds;
+                Utils::GetAll<ABuildingSMActor>(Builds);
 
                 for (auto& Build : Builds)
                     if (Build->bPlayerPlaced)
@@ -404,13 +479,13 @@ void GUI::Init()
 
             if (ImGui::Button("Destroy Floor Loot"))
             {
-				TArray<AFortPickupAthena*> Pickups;
-				Utils::GetAll<AFortPickupAthena>(Pickups);
-				
+                TArray<AFortPickupAthena*> Pickups;
+                Utils::GetAll<AFortPickupAthena>(Pickups);
+
                 for (auto& Pickup : Pickups)
                     Pickup->K2_DestroyActor();
 
-				Pickups.Free();
+                Pickups.Free();
             }
             break;
         case 4:
@@ -419,8 +494,8 @@ void GUI::Init()
             if (ImGui::Button("Dump Items"))
             {
                 std::stringstream ss;
-                
-                ss << "Generated by Erbium (https://github.com/plooshi/Erbium)\n";
+
+                ss << "Generated with Erbium (https://github.com/plooshi/Erbium)\n";
                 char version[6];
 
                 sprintf_s(version, VersionInfo.FortniteVersion >= 5.00 || VersionInfo.FortniteVersion < 1.2 ? "%.2f" : "%.1f", VersionInfo.FortniteVersion);
@@ -468,7 +543,7 @@ void GUI::Init()
             {
                 std::stringstream ss;
 
-                ss << "Generated by Erbium (https://github.com/plooshi/Erbium)\n";
+                ss << "Generated with Erbium (https://github.com/plooshi/Erbium)\n";
                 char version[6];
 
                 sprintf_s(version, VersionInfo.FortniteVersion >= 5.00 || VersionInfo.FortniteVersion < 1.2 ? "%.2f" : "%.1f", VersionInfo.FortniteVersion);
@@ -499,6 +574,33 @@ void GUI::Init()
             }
 
             break;
+
+
+        case 5:
+
+
+
+            ImGui::Text("Zone Phase settings:");
+            ImGui::Spacing();
+            ImGui::SliderInt("Zone phase", &FConfiguration::LateGameZone, 1, 7); // pahse 7 is playeble ig
+            // fix / not use Long Zones for pre-s13 so from 11.00 to 13.30
+            if (VersionInfo.FortniteVersion < 11 || VersionInfo.FortniteVersion > 13.30)
+            {
+                ImGui::Spacing();
+                ImGui::Spacing();
+                ImGui::Text("LateGame Zone Type:");
+                ImGui::Spacing();
+                ImGui::Checkbox("Long Zone", &FConfiguration::bLateGameLongZone);
+            }
+            ImGui::Separator();
+            ImGui::Spacing();
+            ImGui::Text("Information:");
+            ImGui::BulletText("LG Zone Phase: Phases can be 1 - 7");
+            ImGui::BulletText("Long Zone: Infinite timer");
+
+            break;
+            
+
         }
 
         ImGui::End();

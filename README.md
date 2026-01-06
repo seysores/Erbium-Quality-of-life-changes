@@ -23,7 +23,7 @@ Erbium is a WIP universal gameserver for Fortnite.
   - Zone, Events, Dump, and LateGame only appear after the server is ready.
 - Smooth transitions between server states (Launching..., Joinable!, Match Started).
 
-3. Lategame Adjustments
+3. Lategame Adjustments (CREDITS [@DUCKI67](https://github.com/Ducki67/))
 - Added options for LateGame settings, including:
   - Zone phase selection (1–7)
   - Long zone toggle for extended timers

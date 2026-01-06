@@ -122,6 +122,18 @@ FLateGameItem LateGame::GetShotgun()
 
         }
 
+        // CH5
+        else if (VersionInfo.FortniteVersion >= 29.00 && VersionInfo.FortniteVersion <= 29.40)
+        {
+            Shotguns =
+            {
+				// Gatekeeper Shotty
+                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_UR.WID_Shotgun_Break_Cerberus_Athena_UR")),
+                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_SR.WID_Shotgun_Break_Cerberus_Athena_SR")), 
+                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_VR.WID_Shotgun_Break_Cerberus_Athena_VR")), 
+                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_R.WID_Shotgun_Break_Cerberus_Athena_R")), 
+            };
+        }
 
         // CH5 S3
         else if (VersionInfo.FortniteVersion >= 30.00)
@@ -456,7 +468,6 @@ FLateGameItem LateGame::GetUtility()
                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaSMG_Burst/HitscanWIDs/WID_SMG_Paprika_Burst_Athena_HS_R.WID_SMG_Paprika_Burst_Athena_HS_R")) // thunder busrt blue
             };
         }
-
 
         // CH5 S3
         else if (VersionInfo.FortniteVersion >= 30.00)

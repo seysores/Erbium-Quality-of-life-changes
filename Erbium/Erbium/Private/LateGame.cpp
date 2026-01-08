@@ -1,564 +1,714 @@
-
 #include "pch.h"
-#include "../Public/LateGame.h"
-#include "../Public/Utils.h"
-#include "../../FortniteGame/Public/FortInventory.h"
-
-
+#include "../Public/GUI.h"
 #include <d3d11.h>
+#include "../../ImGui/imgui.h"
+#include "../../ImGui/imgui_impl_win32.h"
+#include "../../ImGui/imgui_impl_dx11.h"
+#include "../Public/Configuration.h"
+#include "../Public/Events.h"
+#include "../../FortniteGame/Public/BattleRoyaleGamePhaseLogic.h"
+#include "../../FortniteGame/Public/BuildingSMActor.h"
 #include <sstream>
 #include <fstream>
+#pragma comment(lib, "d3d11.lib")
 
-#include <string>
-#include <algorithm> // For std::count
-#include <vector>    // For using std::vector
-#include <iostream>  // For printing output
-#include <Windows.h>
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-#include "Erbium/Public/Configuration.h"
-//#include "FortniteGame/Private/FortPlayerControllerAthena.cpp"
+UINT g_ResizeWidth = 0, g_ResizeHeight = 0;
 
-
-
-FLateGameItem LateGame::GetShotgun()
+LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    UEAllocatedVector<FLateGameItem> Shotguns;
-    if (FConfiguration::bLGV2)  // LG V2 (versionized guns and gameplay)
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+        return true;
+
+    switch (msg)
     {
-        // CH1
-        if (VersionInfo.FortniteVersion >= 1.2 && VersionInfo.FortniteVersion <= 2.5)
-        {
-            Shotguns =
-            {
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_Standard_Athena_UC_Ore_T03.WID_Shotgun_Standard_Athena_UC_Ore_T03")), // Green
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_Standard_Athena_C_Ore_T03.WID_Shotgun_Standard_Athena_C_Ore_T03")) // Gray
-            };
-        }
-
-        // CH1 - CH2 S8
-        if (VersionInfo.FortniteVersion >= 5.00 && VersionInfo.FortniteVersion <= 18.40)
-        {
-            Shotguns =
-            {
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_Standard_Athena_VR_Ore_T03.WID_Shotgun_Standard_Athena_VR_Ore_T03")), // Epic
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_Standard_Athena_SR_Ore_T03.WID_Shotgun_Standard_Athena_SR_Ore_T03")) // Gold
-            };
-        }
-
-        // CH4 S1
-        else if (VersionInfo.FortniteVersion >= 23.0 && VersionInfo.FortniteVersion <= 23.50)
-        {
-            Shotguns =
-            {
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterPumpShotgun/WID_Shotgun_MusterPump_Athena_VR.WID_Shotgun_MusterPump_Athena_VR")), // Epic
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterPumpShotgun/WID_Shotgun_MusterPump_Athena_SR.WID_Shotgun_MusterPump_Athena_SR")), // Gold
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterPumpShotgun/WID_Shotgun_MusterPump_Athena_R.WID_Shotgun_MusterPump_Athena_R")) // Rare  
-            };
-        }
-
-        // CH4 S2
-        else if (VersionInfo.FortniteVersion >= 24.0 && VersionInfo.FortniteVersion <= 24.40)
-        {
-            Shotguns =
-            {
-                // thunder shotty
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterPumpShotgun/WID_Shotgun_MusterPump_Athena_VR.WID_Shotgun_MusterPump_Athena_VR")), // Epic
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterPumpShotgun/WID_Shotgun_MusterPump_Athena_SR.WID_Shotgun_MusterPump_Athena_SR")), // Gold
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterPumpShotgun/WID_Shotgun_MusterPump_Athena_R.WID_Shotgun_MusterPump_Athena_R")), // Rare  
-
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/RadicalWeaponsGameplay/Weapons/RadicalShotgunPump/WID_Shotgun_RadicalPump_Athena_VR.WID_Shotgun_RadicalPump_Athena_VR")), // Epic
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/RadicalWeaponsGameplay/Weapons/RadicalShotgunPump/WID_Shotgun_RadicalPump_Athena_SR.WID_Shotgun_RadicalPump_Athena_SR")), // Gold
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/RadicalWeaponsGameplay/Weapons/RadicalShotgunPump/WID_Shotgun_RadicalPump_Athena_R.WID_Shotgun_RadicalPump_Athena_R")), // Rare  
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/RadicalWeaponsGameplay/Weapons/RadicalShotgunPump/WID_Shotgun_RadicalPump_Athena_UR.WID_Shotgun_RadicalPump_Athena_UR")) // Mythic
-            };
-        }
-
-
-        // CH4 S4
-        else if (VersionInfo.FortniteVersion >= 26.0 && VersionInfo.FortniteVersion <= 26.30)
-        {
-            Shotguns =
-            {
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/ChronoWeaponGameplay/Items/ChronoShotgun/WID_Shotgun_Chrono_Athena_VR.WID_Shotgun_Chrono_Athena_VR")), // Epic
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/ChronoWeaponGameplay/Items/ChronoShotgun/WID_Shotgun_Chrono_Athena_SR.WID_Shotgun_Chrono_Athena_SR")), // Gold
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/ChronoWeaponGameplay/Items/ChronoShotgun/WID_Shotgun_Chrono_Athena_R.WID_Shotgun_Chrono_Athena_R")), // Rare  
-
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/HopscotchWeaponsGameplay/Items/HopscotchShotgun/WID_Shotgun_HopScotch_Athena_SR.WID_Shotgun_HopScotch_Athena_SR")), // Gold
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/HopscotchWeaponsGameplay/Items/HopscotchShotgun/WID_Shotgun_HopScotch_Athena_VR.WID_Shotgun_HopScotch_Athena_VR")), // Epic
-                 FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/HopscotchWeaponsGameplay/Items/HopscotchShotgun/WID_Shotgun_HopScotch_Athena_R.WID_Shotgun_HopScotch_Athena_R")) // Rare
-            };
-        }
-
-        // Ch4 S5 (sOG)
-        else if (VersionInfo.FortniteVersion >= 27.0 && VersionInfo.FortniteVersion <= 27.11)
-        {
-            Shotguns =
-            {
-                // pump / spaz
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_Standard_Athena_SR_Ore_T03.WID_Shotgun_Standard_Athena_SR_Ore_T03")), // Gold
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_Standard_Athena_VR_Ore_T03.WID_Shotgun_Standard_Athena_VR_Ore_T03")), // Epic
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_Standard_Athena_UC_Ore_T03.WID_Shotgun_Standard_Athena_UC_Ore_T03")), // Rare  
-
-                // tac shotty
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_HighSemiAuto_Athena_SR_Ore_T03.WID_Shotgun_HighSemiAuto_Athena_SR_Ore_T03")), // Gold
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_HighSemiAuto_Athena_VR_Ore_T03.WID_Shotgun_HighSemiAuto_Athena_VR_Ore_T03")), // Epic
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_SemiAuto_Athena_VR_Ore_T03.WID_Shotgun_SemiAuto_Athena_VR_Ore_T03")) // Rare
-            };
-        }
-
-
-        // CH5
-        else if (VersionInfo.FortniteVersion >= 28.00 && VersionInfo.FortniteVersion <= 28.30)
-        {
-            Shotguns =
-            {
-                // Hammer pump
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaShotgun_Pump/WID_Shotgun_Pump_Paprika_Athena_UR_Boss.WID_Shotgun_Pump_Paprika_Athena_UR_Boss")), // Hammer pump Boss
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaShotgun_Pump/WID_Shotgun_Pump_Paprika_Athena_R.WID_Shotgun_Pump_Paprika_Athena_R")), // rare
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaShotgun_Pump/WID_Shotgun_Pump_Paprika_Athena_VR.WID_Shotgun_Pump_Paprika_Athena_VR")), // Epic
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaShotgun_Pump/WID_Shotgun_Pump_Paprika_Athena_SR.WID_Shotgun_Pump_Paprika_Athena_SR")), // Gold
-
-            };
-
-        }
-
-        // CH5
-        else if (VersionInfo.FortniteVersion >= 29.00 && VersionInfo.FortniteVersion <= 29.40)
-        {
-            Shotguns =
-            {
-				// Gatekeeper Shotty
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_UR.WID_Shotgun_Break_Cerberus_Athena_UR")),
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_SR.WID_Shotgun_Break_Cerberus_Athena_SR")), 
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_VR.WID_Shotgun_Break_Cerberus_Athena_VR")), 
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_R.WID_Shotgun_Break_Cerberus_Athena_R")), 
-            };
-        }
-
-        // CH5 S3
-        else if (VersionInfo.FortniteVersion >= 30.00)
-        {
-            Shotguns =
-            {
-                // Hammer pump
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaShotgun_Pump/WID_Shotgun_Pump_Paprika_Athena_UR_Boss.WID_Shotgun_Pump_Paprika_Athena_UR_Boss")), // Hammer pump Boss
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaShotgun_Pump/WID_Shotgun_Pump_Paprika_Athena_R.WID_Shotgun_Pump_Paprika_Athena_R")), // rare
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaShotgun_Pump/WID_Shotgun_Pump_Paprika_Athena_VR.WID_Shotgun_Pump_Paprika_Athena_VR")), // Epic
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaShotgun_Pump/WID_Shotgun_Pump_Paprika_Athena_SR.WID_Shotgun_Pump_Paprika_Athena_SR")), // Gold
-
-               // Gatekeeper Shotty
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_R.WID_Shotgun_Break_Cerberus_Athena_R")), // Rare
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_VR.WID_Shotgun_Break_Cerberus_Athena_VR")), // Epic
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_SR.WID_Shotgun_Break_Cerberus_Athena_SR")), // Gold
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/CerberusSG/WID_Shotgun_Break_Cerberus_Athena_UR.WID_Shotgun_Break_Cerberus_Athena_UR")), // Boss / mythic
-
-               // Combat shotty
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/WeaponsUpdated/Gameplay/CombatShotgun/WID_Shotgun_Moonflax_Combat_Athena_UR.WID_Shotgun_Moonflax_Combat_Athena_UR")), // Boss / mythic
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/WeaponsUpdated/Gameplay/CombatShotgun/WID_Shotgun_Moonflax_Combat_Athena_R.WID_Shotgun_Moonflax_Combat_Athena_R")), // Rare
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/WeaponsUpdated/Gameplay/CombatShotgun/WID_Shotgun_Moonflax_Combat_Athena_VR.WID_Shotgun_Moonflax_Combat_Athena_VR")), // Epic
-               FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/WeaponsUpdated/Gameplay/CombatShotgun/WID_Shotgun_Moonflax_Combat_Athena_SR.WID_Shotgun_Moonflax_Combat_Athena_SR")), // Gold
-
-            };
-
-        }
-    };
-    // LG V1
-    if (!FConfiguration::bLGV2)
-    {
-        Shotguns =
-        {
-            FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_Standard_Athena_VR_Ore_T03.WID_Shotgun_Standard_Athena_VR_Ore_T03")), // pump 
-            FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Shotgun_Standard_Athena_SR_Ore_T03.WID_Shotgun_Standard_Athena_SR_Ore_T03")), // pump 
-        };
-    };
-
-
-    std::cout << "LATEGAME >> (Shotguns)\n";
-    return Shotguns[rand() % Shotguns.size()];
-}
-
-
-
-FLateGameItem LateGame::GetAssaultRifle()
-{
-    UEAllocatedVector<FLateGameItem> AssaultRifles;
-    if (FConfiguration::bLGV2)  // LG V2 (versionized guns and gameplay)
-    {
-
-        // CH1
-        if (VersionInfo.FortniteVersion >= 1.2 && VersionInfo.FortniteVersion <= 2.5)
-        {
-            AssaultRifles =
-            {
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_SR_Ore_T03.WID_Assault_AutoHigh_Athena_SR_Ore_T03")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_VR_Ore_T03.WID_Assault_AutoHigh_Athena_VR_Ore_T03"))
-            };
-
-        }
-
-        // CH1 - Ch2 S8
-        if (VersionInfo.FortniteVersion >= 5.00 && VersionInfo.FortniteVersion <= 18.40)
-        {
-            AssaultRifles =
-            {
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_SR_Ore_T03.WID_Assault_AutoHigh_Athena_SR_Ore_T03")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_VR_Ore_T03.WID_Assault_AutoHigh_Athena_VR_Ore_T03"))
-            };
-
-        }
-
-        // CH4 S1
-        else if (VersionInfo.FortniteVersion >= 23.0 && VersionInfo.FortniteVersion <= 23.50)
-        {
-            AssaultRifles =
-            {
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterScopedAR/WID_Assault_MusterScoped_Athena_SR.WID_Assault_MusterScoped_Athena_SR")), // Gold
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterScopedAR/WID_Assault_MusterScoped_Athena_VR.WID_Assault_MusterScoped_Athena_VR")),// Epic
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterScopedAR/WID_Assault_MusterScoped_Athena_R.WID_Assault_MusterScoped_Athena_R")), // Rare
-
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_R_Ore_T03.WID_Assault_AutoHigh_Athena_R_Ore_T03")), // Rare
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_VR_Ore_T03.WID_Assault_AutoHigh_Athena_VR_Ore_T03")), // Epic
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_SR_Ore_T03.WID_Assault_AutoHigh_Athena_SR_Ore_T03")) // Gold
-
-
-            };
-
-        }
-
-        // CH4 S2
-        else if (VersionInfo.FortniteVersion >= 24.0 && VersionInfo.FortniteVersion <= 24.40)
-        {
-            AssaultRifles =
-            {
-
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterScopedAR/WID_Assault_MusterScoped_Athena_SR.WID_Assault_MusterScoped_Athena_SR")), // Gold
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterScopedAR/WID_Assault_MusterScoped_Athena_VR.WID_Assault_MusterScoped_Athena_VR")),// Epic
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterScopedAR/WID_Assault_MusterScoped_Athena_R.WID_Assault_MusterScoped_Athena_R")), // Rare
-
-                 // ch4 scar
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_R_Ore_T03.WID_Assault_AutoHigh_Athena_R_Ore_T03")), // Rare
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_VR_Ore_T03.WID_Assault_AutoHigh_Athena_VR_Ore_T03")), // Epic
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_SR_Ore_T03.WID_Assault_AutoHigh_Athena_SR_Ore_T03")), // Gold
-
-                 // havoc suppressed ar
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/RadicalWeaponsGameplay/Weapons/RadicalCoreAR/WID_Assault_Radical_CoreAR_Athena_R.WID_Assault_Radical_CoreAR_Athena_R")), // Rare
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/RadicalWeaponsGameplay/Weapons/RadicalCoreAR/WID_Assault_Radical_CoreAR_Athena_VR.WID_Assault_Radical_CoreAR_Athena_VR")), // Epic
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/RadicalWeaponsGameplay/Weapons/RadicalCoreAR/WID_Assault_Radical_CoreAR_Athena_SR.WID_Assault_Radical_CoreAR_Athena_SR")) // Gold
-
-
-            };
-
-        }
-
-        // CH4 S4
-        else if (VersionInfo.FortniteVersion >= 26.0 && VersionInfo.FortniteVersion <= 26.30)
-        {
-            AssaultRifles =
-            {
-                // twin mag ar
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/HopscotchWeaponsGameplay/Items/FlipmagAR/WID_Assault_FlipMag_Athena_SR.WID_Assault_FlipMag_Athena_SR")), // Gold
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/HopscotchWeaponsGameplay/Items/FlipmagAR/WID_Assault_FlipMag_Athena_VR.WID_Assault_FlipMag_Athena_VR")),// Epic
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/HopscotchWeaponsGameplay/Items/FlipmagAR/WID_Assault_FlipMag_Athena_R.WID_Assault_FlipMag_Athena_R")), // Rare
-
-                 // havoc ar
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/RadicalWeaponsGameplay/Weapons/RadicalCoreAR/WID_Assault_Radical_CoreAR_Athena_R.WID_Assault_Radical_CoreAR_Athena_R")), // Rare
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/RadicalWeaponsGameplay/Weapons/RadicalCoreAR/WID_Assault_Radical_CoreAR_Athena_VR.WID_Assault_Radical_CoreAR_Athena_VR")), // Epic
-                 FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/RadicalWeaponsGameplay/Weapons/RadicalCoreAR/WID_Assault_Radical_CoreAR_Athena_SR.WID_Assault_Radical_CoreAR_Athena_SR")) // Gold
-                 ///FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"ID here")), // Mythic / Boss
-
-
-
-            };
-
-        }
-
-        // CH4 S5 / (sOG)
-        else if (VersionInfo.FortniteVersion >= 27.0 && VersionInfo.FortniteVersion <= 27.11)
-        {
-            AssaultRifles =
-            {
-                // Assault Riffle
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_SR_Ore_T03.WID_Assault_AutoHigh_Athena_SR_Ore_T03")), // Gold
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_VR_Ore_T03.WID_Assault_AutoHigh_Athena_VR_Ore_T03")),// Epic
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_Auto_Athena_R_Ore_T03.WID_Assault_Auto_Athena_R_Ore_T03")), // Rare
-
-            };
-
-        }
-
-        // CH5
-        else if (VersionInfo.FortniteVersion >= 28.00 && VersionInfo.FortniteVersion <= 28.30)
-        {
-            AssaultRifles =
-            {
-                // All here are Hitscan
-
-            FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_DPS/HitscanWIDs/WID_Assault_Paprika_DPS_Athena_HS_UR_Boss.WID_Assault_Paprika_DPS_Athena_HS_UR_Boss")), // Boss / mythic
-            FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_DPS/HitscanWIDs/WID_Assault_Paprika_DPS_Athena_HS_VR.WID_Assault_Paprika_DPS_Athena_HS_VR")),// gold
-            FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_DPS/HitscanWIDs/WID_Assault_Paprika_DPS_Athena_HS_SR.WID_Assault_Paprika_DPS_Athena_HS_SR")), // epic
-            FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_DPS/HitscanWIDs/WID_Assault_Paprika_DPS_Athena_HS_R.WID_Assault_Paprika_DPS_Athena_HS_R")), // blue
-
-            FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Infantry/HitscanWIDs/WID_Assault_Paprika_Infantry_Athena_HS_UR_Boss.WID_Assault_Paprika_Infantry_Athena_HS_UR_Boss")), // Mythic enforcer AR
-            FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Infantry/HitscanWIDs/WID_Assault_Paprika_Infantry_Athena_HS_SR.WID_Assault_Paprika_Infantry_Athena_HS_SR")), // gold
-            FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Infantry/HitscanWIDs/WID_Assault_Paprika_Infantry_Athena_HS_VR.WID_Assault_Paprika_Infantry_Athena_HS_VR")), // epic
-            FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Infantry/HitscanWIDs/WID_Assault_Paprika_Infantry_Athena_HS_R.WID_Assault_Paprika_Infantry_Athena_HS_R")), // blue
-
-            FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Heavy/HitscanWIDs/WID_Assault_Paprika_Heavy_Athena_HS_UR_Boss.WID_Assault_Paprika_Heavy_Athena_HS_UR_Boss")), // boss / mythic
-            FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Heavy/HitscanWIDs/WID_Assault_Paprika_Heavy_Athena_HS_VR.WID_Assault_Paprika_Heavy_Athena_HS_VR")), // gold
-            FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Heavy/HitscanWIDs/WID_Assault_Paprika_Heavy_Athena_HS_SR.WID_Assault_Paprika_Heavy_Athena_HS_SR")), // epic
-            FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Heavy/HitscanWIDs/WID_Assault_Paprika_Heavy_Athena_HS_R.WID_Assault_Paprika_Heavy_Athena_HS_R")), // blue
-
-            FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_DPS/WID_Assault_Paprika_HITSCAN.WID_Assault_Paprika_HITSCAN")), // IDK
-            };
-
-        }
-
-
-        // CH5 S3
-        else if (VersionInfo.FortniteVersion >= 30.00)
-        {
-            AssaultRifles =
-            {
-                // Tac AR
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/WeaponsUpdated/Gameplay/TacticalAR/WID_Assault_SunRose_Tactical_Athena_SR.WID_Assault_SunRose_Tactical_Athena_SR")),// gold
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/WeaponsUpdated/Gameplay/TacticalAR/WID_Assault_SunRose_Tactical_Athena_VR.WID_Assault_SunRose_Tactical_Athena_VR")), // epic
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/WeaponsUpdated/Gameplay/TacticalAR/WID_Assault_SunRose_Tactical_Athena_R.WID_Assault_SunRose_Tactical_Athena_R")), // blue
-
-                // Enforcer AR (hitscan)
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Infantry/HitscanWIDs/WID_Assault_Paprika_Infantry_Athena_HS_UR_Boss.WID_Assault_Paprika_Infantry_Athena_HS_UR_Boss")), // Mythic enforcer AR
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Infantry/HitscanWIDs/WID_Assault_Paprika_Infantry_Athena_HS_SR.WID_Assault_Paprika_Infantry_Athena_HS_SR")), // gold
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Infantry/HitscanWIDs/WID_Assault_Paprika_Infantry_Athena_HS_VR.WID_Assault_Paprika_Infantry_Athena_HS_VR")), // epic
-                FLateGameItem(1,FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaAR_Infantry/HitscanWIDs/WID_Assault_Paprika_Infantry_Athena_HS_R.WID_Assault_Paprika_Infantry_Athena_HS_R")) // blue
-            };
-
-        }
-    };
-    // LG V1
-    if (!FConfiguration::bLGV2)
-    {
-        AssaultRifles =
-        {
-            FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_SR_Ore_T03.WID_Assault_AutoHigh_Athena_SR_Ore_T03")), // scar 
-            FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_VR_Ore_T03.WID_Assault_AutoHigh_Athena_VR_Ore_T03")), // scar
-        };
-    };
-
-    std::cout << "LATEGAME >> (AssaultRifles)\n";
-    return AssaultRifles[rand() % AssaultRifles.size()];
-}
-
-
-
-FLateGameItem LateGame::GetUtility()
-{
-    UEAllocatedVector<FLateGameItem> Snipers;
-    if (FConfiguration::bLGV2)  // LG V2 (versionized guns and gameplay)
-    {
-
-        // CH1
-        if (VersionInfo.FortniteVersion >= 1.2 && VersionInfo.FortniteVersion <= 2.5)
-        {
-            Snipers =
-            {
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03.WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Pistol_Scavenger_Athena_VR_Ore_T03.WID_Pistol_Scavenger_Athena_VR_Ore_T03")),
-                // zapotron (BR)
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Sniper_AMR_Athena_SR_Ore_T03.WID_Sniper_AMR_Athena_SR_Ore_T03"))
-            };
-
-        }
-
-        // CH1 -Ch2 S8
-        if (VersionInfo.FortniteVersion >= 5.00 && VersionInfo.FortniteVersion <= 18.40)
-        {
-            Snipers =
-            {
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03.WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Pistol_Scavenger_Athena_VR_Ore_T03.WID_Pistol_Scavenger_Athena_VR_Ore_T03"))
-            };
-
-        }
-
-        // CH4 S1
-        else if (VersionInfo.FortniteVersion >= 23.0 && VersionInfo.FortniteVersion <= 23.50)
-        {
-            Snipers =
-            {
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterQuickSMG/WID_SMG_MusterQuick_Athena_SR.WID_SMG_MusterQuick_Athena_SR")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterQuickSMG/WID_SMG_MusterQuick_Athena_VR.WID_SMG_MusterQuick_Athena_VR")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterQuickSMG/WID_SMG_MusterQuick_Athena_R.WID_SMG_MusterQuick_Athena_R")),
-
-
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/SwordDMR/WID_Sniper_NoScope_ExSword_Athena_UR_EmblemBoss.WID_Sniper_NoScope_ExSword_Athena_UR_EmblemBoss")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/SwordDMR/WID_Sniper_NoScope_ExSword_Athena_SR.WID_Sniper_NoScope_ExSword_Athena_SR")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/SwordDMR/WID_Sniper_NoScope_ExSword_Athena_VR.WID_Sniper_NoScope_ExSword_Athena_VR")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/SwordDMR/WID_Sniper_NoScope_ExSword_Athena_R.WID_Sniper_NoScope_ExSword_Athena_R"))
-            };
-        }
-
-
-        // CH4 S2
-        else if (VersionInfo.FortniteVersion >= 24.0 && VersionInfo.FortniteVersion <= 24.40)
-        {
-            Snipers =
-            {
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterQuickSMG/WID_SMG_MusterQuick_Athena_SR.WID_SMG_MusterQuick_Athena_SR")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterQuickSMG/WID_SMG_MusterQuick_Athena_VR.WID_SMG_MusterQuick_Athena_VR")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/MusterCoreWeapons/Items/Weapons/MusterQuickSMG/WID_SMG_MusterQuick_Athena_R.WID_SMG_MusterQuick_Athena_R")),
-
-
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/CobraDMR/DMR/WID_DMR22_Athena_SR.WID_DMR22_Athena_SR")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/CobraDMR/DMR/WID_DMR22_Athena_VR.WID_DMR22_Athena_VR")),
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/CobraDMR/DMR/WID_DMR22_Athena_R.WID_DMR22_Athena_R"))
-            };
-        }
-
-        // CH4 S4
-        else if (VersionInfo.FortniteVersion >= 26.0 && VersionInfo.FortniteVersion <= 26.30)
-        {
-            Snipers =
-            {
-                // Suppressed Sniper
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Sniper_Suppressed_Scope_Athena_R_Ore_T03.WID_Sniper_Suppressed_Scope_Athena_R_Ore_T03")), // Rare
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Sniper_Suppressed_Scope_Athena_VR_Ore_T03.WID_Sniper_Suppressed_Scope_Athena_VR_Ore_T03")), // Epic
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Sniper_Suppressed_Scope_Athena_SR_Ore_T03.WID_Sniper_Suppressed_Scope_Athena_SR_Ore_T03")), // Gold
-
-                // Scoped Burst smg 
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/HopscotchWeaponsGameplay/Items/ScopedBurstSMG/WID_SMG_RedDot_Athena_R.WID_SMG_RedDot_Athena_R")), // Rare
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/HopscotchWeaponsGameplay/Items/ScopedBurstSMG/WID_SMG_RedDot_Athena_VR.WID_SMG_RedDot_Athena_VR")), // Epic
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/HopscotchWeaponsGameplay/Items/ScopedBurstSMG/WID_SMG_RedDot_Athena_SR.WID_SMG_RedDot_Athena_SR")), // Gold
-
-                // Combat SMG
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/CorruptionItems/Gameplay/Items/SMG/WID_SMG_Recoil_Athena_SR.WID_SMG_Recoil_Athena_SR")), // Gold
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/CorruptionItems/Gameplay/Items/SMG/WID_SMG_Recoil_Athena_VR.WID_SMG_Recoil_Athena_VR")), // Epic
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/CorruptionItems/Gameplay/Items/SMG/WID_SMG_Recoil_Athena_R.WID_SMG_Recoil_Athena_R")) // Rare
-            };
-        }
-
-        // CH4 S5 / (sOG)
-        else if (VersionInfo.FortniteVersion >= 27.0 && VersionInfo.FortniteVersion <= 27.11)
-        {
-            Snipers =
-            {
-                // Bolt Sniper
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Sniper_BoltAction_Scope_Athena_R_Ore_T03.WID_Sniper_BoltAction_Scope_Athena_R_Ore_T03")), // Rare
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Sniper_BoltAction_Scope_Athena_VR_Ore_T03.WID_Sniper_BoltAction_Scope_Athena_VR_Ore_T03")), // Epic
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03.WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03")), // Gold
-
-                // Hand Cannon
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Pistol_HandCannon_Athena_VR_Ore_T03.WID_Pistol_HandCannon_Athena_VR_Ore_T03")), // Epic
-                FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Pistol_HandCannon_Athena_SR_Ore_T03.WID_Pistol_HandCannon_Athena_SR_Ore_T03")), // Gold
-            };
-        }
-
-        // CH5
-        else if (VersionInfo.FortniteVersion >= 28.00 && VersionInfo.FortniteVersion <= 28.30)
-        {
-            Snipers =
-            {
-                // Hyper SMG (hitscan)
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaSMG_DPS/HitscanWIDs/WID_SMG_Paprika_DPS_Athena_HS_UR_Boss.WID_SMG_Paprika_DPS_Athena_HS_UR_Boss")), // hyper smg mythic
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaSMG_DPS/HitscanWIDs/WID_SMG_Paprika_DPS_Athena_HS_SR.WID_SMG_Paprika_DPS_Athena_HS_SR")), // hyper smg gold
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaSMG_DPS/HitscanWIDs/WID_SMG_Paprika_DPS_Athena_HS_VR.WID_SMG_Paprika_DPS_Athena_HS_VR")), // hyper smg epic
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaSMG_DPS/HitscanWIDs/WID_SMG_Paprika_DPS_Athena_HS_R.WID_SMG_Paprika_DPS_Athena_HS_R")), // hyper smg blue
-
-                // Thunder smg (hitscan)
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaSMG_Burst/HitscanWIDs/WID_SMG_Paprika_Burst_Athena_HS_SR.WID_SMG_Paprika_Burst_Athena_HS_SR")), // thunder busrt gold
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaSMG_Burst/HitscanWIDs/WID_SMG_Paprika_Burst_Athena_HS_VR.WID_SMG_Paprika_Burst_Athena_HS_VR")), // thunder busrt epic
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaSMG_Burst/HitscanWIDs/WID_SMG_Paprika_Burst_Athena_HS_R.WID_SMG_Paprika_Burst_Athena_HS_R")) // thunder busrt blue
-            };
-        }
-
-        // CH5 S3
-        else if (VersionInfo.FortniteVersion >= 30.00)
-        {
-            Snipers =
-            {
-
-                // Harbinger SMG
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/HarbingerSMG/WID_SMG_SunRose_DPS_Athena_UR_Boss.WID_SMG_SunRose_DPS_Athena_UR_Boss")), // Boss / mythic
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/HarbingerSMG/WID_SMG_SunRose_DPS_Athena_SR.WID_SMG_SunRose_DPS_Athena_SR")), //  gold
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/HarbingerSMG/WID_SMG_SunRose_DPS_Athena_VR.WID_SMG_SunRose_DPS_Athena_VR")), // epic
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/SunRoseWeaponsGameplay/Items/Weapons/HarbingerSMG/WID_SMG_SunRose_DPS_Athena_R.WID_SMG_SunRose_DPS_Athena_R")), // blue
-
-                // thunder smg (hitscan)
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaSMG_Burst/HitscanWIDs/WID_SMG_Paprika_Burst_Athena_HS_SR.WID_SMG_Paprika_Burst_Athena_HS_SR")), // thunder busrt gold
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaSMG_Burst/HitscanWIDs/WID_SMG_Paprika_Burst_Athena_HS_VR.WID_SMG_Paprika_Burst_Athena_HS_VR")), // thunder busrt epic
-                FLateGameItem(1, FindObject<UFortWeaponRangedItemDefinition>(L"/PaprikaCoreWeapons/Items/Weapons/PaprikaSMG_Burst/HitscanWIDs/WID_SMG_Paprika_Burst_Athena_HS_R.WID_SMG_Paprika_Burst_Athena_HS_R")) // thunder busrt blue
-            };
-        }
-    };
-    // LG V1
-    if (!FConfiguration::bLGV2)
-    {
-        Snipers =
-        {
-            FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03.WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03")), // bolt
-            FLateGameItem(1, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Weapons/WID_Pistol_Scavenger_Athena_VR_Ore_T03.WID_Pistol_Scavenger_Athena_VR_Ore_T03")) // tac smg
-        };
-
-    };
-
-    std::cout << "LATEGAME >> (Snipers/Utils)\n";
-    return Snipers[rand() % Snipers.size()];
-}
-
-
-FLateGameItem LateGame::GetHeal()
-{
-    static UEAllocatedVector<FLateGameItem> Heals
-    {
-        FLateGameItem(3, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Consumables/Shields/Athena_Shields.Athena_Shields")), // big pots
-        FLateGameItem(6, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Consumables/ShieldSmall/Athena_ShieldSmall.Athena_ShieldSmall")) // minis
-    };
-
-    static bool bAdded = false;
-    if (!bAdded)
-    {
-        bAdded = true;
-
-        auto ChugSplash = FLateGameItem(6, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Consumables/ChillBronco/Athena_ChillBronco.Athena_ChillBronco"));
-        auto SlurpJuice = FLateGameItem(2, FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Consumables/PurpleStuff/Athena_PurpleStuff.Athena_PurpleStuff"));
-
-        if (ChugSplash.Item)
-            Heals.push_back(ChugSplash);
-
-        if (SlurpJuice.Item)
-            Heals.push_back(SlurpJuice);
+    case WM_SIZE:
+        if (wParam == SIZE_MINIMIZED)
+            return 0;
+        g_ResizeWidth = (UINT)LOWORD(lParam);
+        g_ResizeHeight = (UINT)HIWORD(lParam);
+        return 0;
+    case WM_SYSCOMMAND:
+        if ((wParam & 0xfff0) == SC_KEYMENU)
+            return 0;
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
     }
 
-    return Heals[rand() % Heals.size()];
+    return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-const UFortItemDefinition* LateGame::GetAmmo(EAmmoType AmmoType)
+auto WindowWidth = 550;
+auto WindowHeight = 330;
+
+void GUI::Init()
 {
-    static UEAllocatedVector<const UFortItemDefinition*> Ammos
+    ImGui_ImplWin32_EnableDpiAwareness();
+    float main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
+
+    WNDCLASS wc{};
+    wc.lpszClassName = L"ErbiumWC";
+    wc.lpfnWndProc = WndProc;
+    RegisterClass(&wc);
+
+    wchar_t buffer[67];
+    swprintf_s(buffer, VersionInfo.EngineVersion >= 5.0 ? L"(FN %.2f, UE %.1f)" : (VersionInfo.FortniteVersion >= 5.00 || VersionInfo.FortniteVersion < 1.2 ? L"Erbium (FN %.2f, UE %.2f)" : L"Erbium (FN %.1f, UE %.2f)"), VersionInfo.FortniteVersion, VersionInfo.EngineVersion);
+    auto hWnd = CreateWindow(wc.lpszClassName, buffer, WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_THICKFRAME, 100, 100, (int)(WindowWidth * main_scale), (int)(WindowHeight * main_scale), nullptr, nullptr, nullptr, nullptr);
+
+    IDXGISwapChain* g_pSwapChain = nullptr;
+    ID3D11Device* g_pd3dDevice = nullptr;
+    ID3D11DeviceContext* g_pd3dDeviceContext = nullptr;
+
+    DXGI_SWAP_CHAIN_DESC sd;
+    ZeroMemory(&sd, sizeof(sd));
+    sd.BufferCount = 2;
+    sd.BufferDesc.Width = 0;
+    sd.BufferDesc.Height = 0;
+    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    sd.BufferDesc.RefreshRate.Numerator = 60;
+    sd.BufferDesc.RefreshRate.Denominator = 1;
+    sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    sd.OutputWindow = hWnd;
+    sd.SampleDesc.Count = 1;
+    sd.SampleDesc.Quality = 0;
+    sd.Windowed = TRUE;
+    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+
+    UINT createDeviceFlags = 0;
+    //createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+    D3D_FEATURE_LEVEL featureLevel;
+    const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
+    HRESULT res = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext);
+    if (res == DXGI_ERROR_UNSUPPORTED)
+        res = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_WARP, nullptr, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext);
+    if (res != S_OK)
+        return;
+
+    ID3D11RenderTargetView* g_mainRenderTargetView;
+
+    ID3D11Texture2D* pBackBuffer;
+    g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
+    g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_mainRenderTargetView);
+    pBackBuffer->Release();
+
+    ShowWindow(hWnd, SW_SHOWDEFAULT);
+    UpdateWindow(hWnd);
+    DWORD dwMyID = ::GetCurrentThreadId();
+    DWORD dwCurID = ::GetWindowThreadProcessId(hWnd, NULL);
+    AttachThreadInput(dwCurID, dwMyID, TRUE);
+    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+    SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE);
+    SetForegroundWindow(hWnd);
+    SetFocus(hWnd);
+    SetActiveWindow(hWnd);
+    AttachThreadInput(dwCurID, dwMyID, FALSE);
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.IniFilename = NULL;
+    //io.DisplaySize = ImGui::GetMainViewport()->Size;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+    ImFontConfig FontConfig;
+    FontConfig.FontDataOwnedByAtlas = false;
+    ImGui::GetIO().Fonts->AddFontFromMemoryTTF((void*)font, sizeof(font), 17.f, &FontConfig);
+
+    auto& mStyle = ImGui::GetStyle();
+    mStyle.WindowRounding = 20.f;
+    mStyle.ItemSpacing = ImVec2(20, 6);
+    mStyle.ItemInnerSpacing = ImVec2(8, 4);
+    mStyle.FrameRounding = 4.5f;
+    mStyle.GrabMinSize = 14.0f;
+    mStyle.GrabRounding = 16.0f;
+    mStyle.ScrollbarSize = 12.0f;
+    mStyle.ScrollbarRounding = 16.0f;
+    mStyle.ChildRounding = 8.f;
+
+    ImGuiStyle& style = mStyle;
+    // text
+    style.Colors[ImGuiCol_Text] = ImVec4(0.88f, 0.88f, 0.92f, 1.00f);
+    style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.55f, 1.00f);
+
+    // window / title
+    style.Colors[ImGuiCol_TitleBg] = ImVec4(0.18f, 0.18f, 0.22f, 1.00f);
+    style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.22f, 0.20f, 0.28f, 1.00f);
+    style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.15f, 0.15f, 0.18f, 0.75f);
+
+    // frames
+    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.20f, 0.20f, 0.24f, 1.00f);
+    style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.32f, 0.28f, 0.40f, 0.85f);
+    style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.42f, 0.34f, 0.55f, 1.00f);
+
+    // buttons
+    style.Colors[ImGuiCol_Button] = ImVec4(0.22f, 0.22f, 0.26f, 1.00f);
+    style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.36f, 0.30f, 0.48f, 0.90f);
+    style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.48f, 0.38f, 0.65f, 1.00f);
+
+    // sliders / checks
+    style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.55f, 0.45f, 0.75f, 0.85f);
+    style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.65f, 0.52f, 0.90f, 1.00f);
+    style.Colors[ImGuiCol_CheckMark] = ImVec4(0.70f, 0.55f, 0.95f, 1.00f);
+
+    // headers (tree nodes, selectable, etc)
+    style.Colors[ImGuiCol_Header] = ImVec4(0.45f, 0.35f, 0.65f, 0.75f);
+    style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.55f, 0.45f, 0.80f, 0.85f);
+    style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.60f, 0.50f, 0.90f, 1.00f);
+
+    // selection / popup
+    style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.55f, 0.40f, 0.85f, 0.45f);
+    style.Colors[ImGuiCol_PopupBg] = ImVec4(0.14f, 0.14f, 0.18f, 0.95f);
+
+    // tabs
+    style.Colors[ImGuiCol_Tab] = ImVec4(0.20f, 0.20f, 0.25f, 1.00f);
+    style.Colors[ImGuiCol_TabHovered] = ImVec4(0.40f, 0.32f, 0.55f, 1.00f);
+    style.Colors[ImGuiCol_TabSelected] = ImVec4(0.28f, 0.24f, 0.38f, 1.00f);
+
+    //ImGui::StyleColorsDark();
+
+    //ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(main_scale);
+    style.FontScaleDpi = main_scale;
+
+    ImGui_ImplWin32_Init(hWnd);
+    ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
+
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    bool done = false;
+    bool g_SwapChainOccluded = false;
+
+    while (!done)
     {
-        FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Ammo/AthenaAmmoDataBulletsLight.AthenaAmmoDataBulletsLight"),
-        FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Ammo/AthenaAmmoDataShells.AthenaAmmoDataShells"),
-        FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Ammo/AthenaAmmoDataBulletsMedium.AthenaAmmoDataBulletsMedium"),
-        FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Ammo/AmmoDataRockets.AmmoDataRockets"),
-        FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Ammo/AthenaAmmoDataBulletsHeavy.AthenaAmmoDataBulletsHeavy"),
+        MSG msg;
 
-        FindObject<UFortItemDefinition>(L"/Game/Athena/Items/Ammo/AthenaAmmoDataEnergyCell.AthenaAmmoDataEnergyCell")
-    };
+        while (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+            if (msg.message == WM_QUIT)
+                done = true;
+        }
 
-    return Ammos[(uint8)AmmoType];
-    std::cout << "LATEGAME >> (Ammos)\n";
-}
+        if (done)
+            break;
 
-const UFortItemDefinition* LateGame::GetResource(EFortResourceType ResourceType)
-{
-    static UEAllocatedVector<const UFortItemDefinition*> Resources
-    {
-        FindObject<UFortItemDefinition>(L"/Game/Items/ResourcePickups/WoodItemData.WoodItemData"),
-        FindObject<UFortItemDefinition>(L"/Game/Items/ResourcePickups/StoneItemData.StoneItemData"),
-        FindObject<UFortItemDefinition>(L"/Game/Items/ResourcePickups/MetalItemData.MetalItemData")
-    };
-    std::cout << "LATEGAME >> (Mats)\n";
+        if (g_SwapChainOccluded && g_pSwapChain->Present(0, DXGI_PRESENT_TEST) == DXGI_STATUS_OCCLUDED)
+        {
+            Sleep(10);
+            continue;
+        }
+
+        if (g_ResizeWidth != 0 && g_ResizeHeight != 0)
+        {
+            g_mainRenderTargetView->Release();
+
+            g_pSwapChain->ResizeBuffers(0, g_ResizeWidth, g_ResizeHeight, DXGI_FORMAT_UNKNOWN, 0);
+            g_ResizeWidth = g_ResizeHeight = 0;
+
+            ID3D11Texture2D* pBackBuffer;
+            g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
+            g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_mainRenderTargetView);
+            pBackBuffer->Release();
+        }
+
+        ImGui_ImplDX11_NewFrame();
+        ImGui_ImplWin32_NewFrame();
+        ImGui::NewFrame();
+
+        main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
+        ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(WindowWidth * main_scale, WindowHeight * main_scale), ImGuiCond_Always);
+
+        ImGui::Begin("##Erbium", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+        ImDrawList* draw = ImGui::GetWindowDrawList();
+        ImVec2 p0 = ImGui::GetWindowPos();
+        ImVec2 p1 = ImVec2(p0.x + ImGui::GetWindowWidth(), p0.y + ImGui::GetWindowHeight());
+
+        struct Star { ImVec2 pos; float phase; };
+        static std::vector<Star> stars;
+        static bool initialized = false;
+
+        if (!initialized)
+        {
+            initialized = true;
+            int numStars = 100;
+            float width = ImGui::GetWindowWidth();
+            float height = ImGui::GetWindowHeight();
+
+            for (int i = 0; i < numStars; i++)
+            {
+                float x = (float)(rand() % (int)width);
+                float y = (float)(rand() % (int)height);
+                float phase = ((float)(rand() % 1000) / 1000.0f) * 6.28f;
+                stars.push_back({ ImVec2(x, y), phase });
+            }
+        }
+        
+        ImU32 topColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.28f, 0.22f, 0.35f, 1.0f));
+        ImU32 bottomColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.18f, 0.16f, 0.20f, 1.0f));
+        draw->AddRectFilledMultiColor(p0, p1, topColor, topColor, bottomColor, bottomColor);
+
+        HWND fg = GetForegroundWindow();
+        if (fg == hWnd)
+        {
+            static float phase = 0.0f;
+            phase += 0.0005f;
+
+            int numLines = 12;
+            float windowWidth = ImGui::GetWindowWidth();
+            float windowHeight = ImGui::GetWindowHeight();
+
+            for (int i = 0; i < numLines; i++)
+            {
+                float lineBaseY = (float)i / (float)numLines * windowHeight * 0.8f + windowHeight * 0.1f;
+                float amplitude = 5.0f + i * 1.5f;
+                float frequency = 0.008f + i * 0.0007f;
+                float phaseOffset = i * 0.3f;
+
+                ImVec2 prevPoint(p0.x, p0.y + lineBaseY);
+
+                for (int x = 0; x <= (int)windowWidth; x++)
+                {
+                    float y = sinf(x * frequency + phase + phaseOffset) * amplitude + lineBaseY;
+                    ImVec2 currPoint(p0.x + (float)x, p0.y + y);
+                    ImU32 color = IM_COL32(50 + i * 5, 10, 80 + i * 5, 120);
+                    draw->AddLine(prevPoint, currPoint, color, 1.0f);
+                    prevPoint = currPoint;
+                }
+            }
+
+            float time = (float)ImGui::GetTime();
+            for (auto& star : stars)
+            {
+                float alpha = 0.5f + 0.5f * sinf(time * 2.0f + star.phase);
+                ImU32 color = IM_COL32(255, 255, 255, (int)(alpha * 255.0f));
+                draw->AddCircleFilled(ImVec2(p0.x + star.pos.x, p0.y + star.pos.y), 1.0f, color);
+
+                float speed = 20.0f; // pixels per second
+                star.pos.x += speed * ImGui::GetIO().DeltaTime; // move right
+                star.pos.y += sinf(time * 2.0f + star.phase) * 0.5f; // optional small vertical wobble
+
+                // wrap around horizontally
+                if (star.pos.x > ImGui::GetWindowWidth())
+                    star.pos.x = 0;
+                if (star.pos.x < 0)
+                    star.pos.x = ImGui::GetWindowWidth();
+
+                // wrap vertically if you want
+                if (star.pos.y > ImGui::GetWindowHeight())
+                    star.pos.y = 0;
+                if (star.pos.y < 0)
+                    star.pos.y = ImGui::GetWindowHeight();
+            }
+        }
+
+        int SelectedUI = 0;
+        int hasEvent = 0;
+
+        // check events once
+        if (hasEvent == 0)
+        {
+            hasEvent = 1;
+            for (auto& Event : Events::EventsArray)
+            {
+                if (Event.EventVersion != VersionInfo.FortniteVersion)
+                    continue;
+
+                hasEvent = 2;
+                break; // found a valid event
+            }
+        }
+
+        if (ImGui::BeginTabBar(""))
+        {
+            // always visible
+            if (ImGui::BeginTabItem("Erbium"))
+            {
+                SelectedUI = 0;
+                ImGui::EndTabItem();
+            }
+
+            // always visible, not nested under StartedMatch
+            if (ImGui::BeginTabItem("Other"))
+            {
+                SelectedUI = 3;
+                ImGui::EndTabItem();
+            }
+
+            // only after launching is done
+            if (gsStatus != NotReady)
+            {
+                if (gsStatus == StartedMatch)
+                {
+                    if (ImGui::BeginTabItem("Zone"))
+                    {
+                        SelectedUI = 1;
+                        ImGui::EndTabItem();
+                    }
+
+                    if (hasEvent == 2 && ImGui::BeginTabItem("Events"))
+                    {
+                        SelectedUI = 2;
+                        ImGui::EndTabItem();
+                    }
+                }
+
+                if (ImGui::BeginTabItem("Destroy"))
+
+                {
+                    SelectedUI = 9;
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::BeginTabItem("Dump"))
+                {
+                    SelectedUI = 4;
+                    ImGui::EndTabItem();
+                }
+
+                if (FConfiguration::bLateGame)
+                {
+                    if (ImGui::BeginTabItem("Late Game"))
+                    {
+                        SelectedUI = 5;
+                        ImGui::EndTabItem();
+                    }
+                }
+            }
+
+            ImGui::EndTabBar();
+        }
+
+        static char commandBuffer[1024] = { 0 };
+        auto GameMode = UWorld::GetWorld() ? (AFortGameMode*)UWorld::GetWorld()->AuthorityGameMode : nullptr;
+        switch (SelectedUI)
+        {
+        case 0:
+            if (gsStatus >= Joinable)
+                ImGui::BeginChild("ServerInfo", ImVec2(245 * main_scale, 110 * main_scale));
+            if (gsStatus == NotReady)
+            {
+                static float dotTimer = 0.0f;
+                dotTimer += ImGui::GetIO().DeltaTime;
+
+                int dots = ((int)(dotTimer * 5.0f)) % 4; // 0–3 dots
+                std::string anim = "Launching";
+                anim.append(dots, '.');
+
+                ImGui::Text(("Status: " + anim).c_str());
+            }
+            else
+            {
+                ImGui::Text((std::string("Status: ") + (gsStatus == Joinable ? "Joinable." : "Match Started.")).c_str());
+            }
+
+            if (gsStatus >= Joinable)
+            {
+                ImGui::Text((std::string("Players: ") + std::to_string(GameMode->AlivePlayers.Num())).c_str());
+
+                auto Playlist = VersionInfo.FortniteVersion >= 3.5 && GameMode->HasWarmupRequiredPlayerCount() ? (GameMode->GameState->HasCurrentPlaylistInfo() ? GameMode->GameState->CurrentPlaylistInfo.BasePlaylist : GameMode->GameState->CurrentPlaylistData) : nullptr;
+
+                if (Playlist)
+                {
+                    FString Name = UKismetTextLibrary::Conv_TextToString(Playlist->UIDisplayName);
+                    ImGui::Text((UEAllocatedString("Playlist: ") + Name.ToString()).c_str());
+                }
+                ImGui::Text((std::string("") + std::to_string((int)floor(UGameplayStatics::GetTimeSeconds(GameMode))) + "s Elapsed").c_str());
+            }
+            if (gsStatus >= Joinable)
+            {
+                ImGui::EndChild();
+                ImGui::Spacing();
+            }
+            if (gsStatus <= Joinable)
+                ImGui::Checkbox("Lategame", &FConfiguration::bLateGame);
+                ImGui::SliderInt("Tick Rate:", &FConfiguration::MaxTickRate, 30, 360);
+
+            if (gsStatus == Joinable && ImGui::Button("Start Bus"))
+            {
+                if (UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetDefaultObj())
+                {
+                    UFortGameStateComponent_BattleRoyaleGamePhaseLogic::bStartAircraft = true;
+                    //auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get();
+
+                    //GamePhaseLogic->StartAircraftPhase();
+                }
+                else
+                    UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), FString(L"startaircraft"), nullptr);
+            }
+            ImGui::SetNextItemWidth(160 * main_scale);
+            ImGui::InputText("##ConsoleCmd", commandBuffer, 1024);
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Execute"))
+            {
+                std::string str = commandBuffer;
+                auto wstr = std::wstring(str.begin(), str.end());
+
+                UKismetSystemLibrary::ExecuteConsoleCommand(
+                    UWorld::GetWorld(),
+                    FString(wstr.c_str()),
+                    nullptr
+                );
+            }
+
+            {
+                std::string str = commandBuffer;
+                auto wstr = std::wstring(str.begin(), str.end());
+
+                UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), FString(wstr.c_str()), nullptr);
+            }
+            break;
+        case 1:
+            if (ImGui::Button("Pause Safe Zone"))
+            {
+                UFortGameStateComponent_BattleRoyaleGamePhaseLogic::bPausedZone = true;
+                if (GameMode->HasbSafeZonePaused())
+                    GameMode->bSafeZonePaused = true;
+                UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), FString(L"pausesafezone"), nullptr);
+            }
+
+            if (ImGui::Button("Resume Safe Zone"))
+            {
+                UFortGameStateComponent_BattleRoyaleGamePhaseLogic::bPausedZone = false;
+                if (GameMode->HasbSafeZonePaused())
+                    GameMode->bSafeZonePaused = false;
+                UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), FString(L"startsafezone"), nullptr);
+            }
+
+            if (ImGui::Button("Skip Safe Zone"))
+            {
+                if (GameMode->HasSafeZoneIndicator())
+                {
+                    if (GameMode->SafeZoneIndicator)
+                    {
+                        GameMode->SafeZoneIndicator->SafeZoneStartShrinkTime = (float)UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+                        GameMode->SafeZoneIndicator->SafeZoneFinishShrinkTime = GameMode->SafeZoneIndicator->SafeZoneStartShrinkTime + 0.05f;
+                    }
+                }
+                else
+                {
+                    auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(UWorld::GetWorld());
+
+                    if (GamePhaseLogic->SafeZoneIndicator)
+                    {
+                        GamePhaseLogic->SafeZoneIndicator->SafeZoneStartShrinkTime = (float)UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+                        GamePhaseLogic->SafeZoneIndicator->SafeZoneFinishShrinkTime = GamePhaseLogic->SafeZoneIndicator->SafeZoneStartShrinkTime + 0.05f;
+                    }
+                }
+
+                // UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), FString(L"skipsafezone"), nullptr);
+            }
+
+            if (ImGui::Button("Start Zone closing"))
+            {
+                if (GameMode->HasSafeZoneIndicator())
+                {
+                    if (GameMode->SafeZoneIndicator)
+                        GameMode->SafeZoneIndicator->SafeZoneStartShrinkTime = (float)UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+                }
+                else
+                {
+                    auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(UWorld::GetWorld());
+
+                    if (GamePhaseLogic->SafeZoneIndicator)
+                        GamePhaseLogic->SafeZoneIndicator->SafeZoneStartShrinkTime = (float)UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+                }
+
+                // UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), FString(L"startshrinksafezone"), nullptr);
+            }
+
+            break;
+        case 2:
+            if (ImGui::Button("Start Event"))
+                Events::StartEvent();
+
+            break;
+        case 3:
+            ImGui::Checkbox("Infinite Mats", &FConfiguration::bInfiniteMats);
+            ImGui::Checkbox("Infinite Ammo", &FConfiguration::bInfiniteAmmo);
+            ImGui::Checkbox("Keep Inventory", &FConfiguration::bKeepInventory);
+
+            break;
+        case 9: // Destroy Builds tab
+            if (ImGui::Button("Destroy Builds"))
+            {
+                ImGui::Separator();
+                ImGui::BulletText("Will destroy all player builds.");
+
+                TArray<ABuildingSMActor*> Builds;
+                Utils::GetAll<ABuildingSMActor>(Builds);
+
+                for (auto& Build : Builds)
+                    if (Build->bPlayerPlaced)
+                        Build->K2_DestroyActor();
+
+                Builds.Free();
+            }
+
+            if (ImGui::Button("Destroy Floor Loot"))
+            {
+                ImGui::Separator();
+                ImGui::BulletText("Will remove any dropped items.");
+
+                TArray<AFortPickupAthena*> Pickups;
+                Utils::GetAll<AFortPickupAthena>(Pickups);
+
+                for (auto& Pickup : Pickups)
+                    Pickup->K2_DestroyActor();
+
+                Pickups.Free();
+            }
+            break;
+
+        case 4:
+            static auto PlaylistClass = UFortPlaylistAthena::StaticClass();
+
+            if (ImGui::Button("Dump Items"))
+
+            {
+                std::stringstream ss;
+
+                ss << "Generated with Erbium (https://github.com/plooshi/Erbium)\n";
+                char version[6];
+
+                sprintf_s(version, VersionInfo.FortniteVersion >= 5.00 || VersionInfo.FortniteVersion < 1.2 ? "%.2f" : "%.1f", VersionInfo.FortniteVersion);
+                ss << "Fortnite version: " << version << "\n\n";
+
+                auto RarityEnum = EFortRarity::StaticEnum();
+                for (int i = 0; i < TUObjectArray::Num(); i++)
+                {
+                    auto Object = TUObjectArray::GetObjectByIndex(i);
+                    if (!Object || !Object->Class || Object->IsDefaultObject() || !Object->IsA<UFortWorldItemDefinition>())
+                        continue;
+                    auto Item = (UFortWorldItemDefinition*)Object;
+
+                    FString Name = UKismetTextLibrary::Conv_TextToString(Item->HasDisplayName() ? Item->DisplayName : Item->ItemName);
+
+                    ss << "- " << UKismetSystemLibrary::GetPathName(Item).ToString() << "\n";
+                    ss << "-     Name: " << (Name.GetData() ? Name.ToString() : "None") << "\n";
+
+                    auto Names = *(TArray<TPair<FName, int64>>*)(__int64(RarityEnum) + 0x40);
+
+                    for (int i = 0; i < Names.Num(); i++)
+                    {
+                        auto& Pair = Names[i];
+                        auto& Name = Pair.Key();
+                        auto& Value = Pair.Value();
+
+                        if (Value == Item->Rarity)
+                        {
+                            auto str = Name.ToString();
+                            auto colcolIdx = str.find_last_of("::");
+
+                            auto RealName = colcolIdx == -1 ? str : str.substr(colcolIdx + 1);
+
+                            ss << "-     Rarity: " << RealName << "\n";
+                        }
+                    }
+                }
+
+                std::ofstream of("DumpedItems.txt", std::ios::trunc);
+
+                of << ss.str();
+                of.close();
+            }
+            else if (PlaylistClass && ImGui::Button("Dump Playlists"))
+            {
+                ImGui::Separator();
+                ImGui::Spacing();
+                ImGui::BulletText("Will dump to the Win64 Folder.");
+
+                std::stringstream ss;
+
+                ss << "Generated with Erbium (https://github.com/plooshi/Erbium)\n";
+                char version[6];
+
+                sprintf_s(version, VersionInfo.FortniteVersion >= 5.00 || VersionInfo.FortniteVersion < 1.2 ? "%.2f" : "%.1f", VersionInfo.FortniteVersion);
+                ss << "Fortnite version: " << version << "\n\n";
+
+                auto RarityEnum = EFortRarity::StaticEnum();
+                for (int i = 0; i < TUObjectArray::Num(); i++)
+                {
+                    auto Object = TUObjectArray::GetObjectByIndex(i);
+                    if (!Object || !Object->Class || Object->IsDefaultObject() || !Object->IsA<UFortPlaylistAthena>())
+                        continue;
+                    auto Playlist = (UFortPlaylistAthena*)Object;
+
+                    FString Name = UKismetTextLibrary::Conv_TextToString(Playlist->UIDisplayName);
+
+                    ss << "- " << UKismetSystemLibrary::GetPathName(Playlist).ToString() << "\n";
+                    ss << "-     Name: " << (Name.GetData() ? Name.ToString() : "None") << "\n";
+                    if (Playlist->HasMaxPlayers())
+                        ss << "-     Max players: " << std::to_string(Playlist->MaxPlayers) << "\n";
+                    if (Playlist->HasMaxSquadSize())
+                        ss << "-     Squad size: " << std::to_string(Playlist->MaxSquadSize) << "\n";
+                }
+
+                std::ofstream of("DumpedPlaylists.txt", std::ios::trunc);
+
+                of << ss.str();
+                of.close();
+            }
+
+            break;
 
 
-    return Resources[(uint8)ResourceType];
+        case 5:
 
 
+
+            ImGui::Text("Zone Phase settings:");
+            ImGui::Spacing();
+            ImGui::SliderInt("Siphon Amount:", &FConfiguration::SiphonAmount, 50, 200);
+            ImGui::SliderInt("Zone phase", &FConfiguration::LateGameZone, 1, 7); // pahse 7 is playeble ig
+            // fix / not use Long Zones for pre-s13 so from 11.00 to 13.30
+            if (VersionInfo.FortniteVersion < 11 || VersionInfo.FortniteVersion > 13.30)
+            {
+                ImGui::Spacing();
+                ImGui::Spacing();
+                ImGui::Text("LateGame Zone Type:");
+                ImGui::Spacing();
+                ImGui::Checkbox("Long Zone", &FConfiguration::bLateGameLongZone);
+            }
+            ImGui::Separator();
+            ImGui::Spacing();
+            ImGui::Text("Information:");
+            ImGui::BulletText("LG Zone Phase: Phases can be 1 - 7");
+            ImGui::BulletText("Long Zone: Infinite timer");
+
+            break;
+            
+
+        }
+
+        ImGui::End();
+
+
+        ImGui::Render();
+        const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
+        g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
+        g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
+        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+        HRESULT hr = g_pSwapChain->Present(1, 0);
+        g_SwapChainOccluded = (hr == DXGI_STATUS_OCCLUDED);
+    }
+
+    ImGui_ImplDX11_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
+
+    g_pSwapChain->Release();
+    g_pd3dDeviceContext->Release();
+    g_pd3dDevice->Release();
+    DestroyWindow(hWnd);
+    UnregisterClass(wc.lpszClassName, wc.hInstance);
+    TerminateProcess(GetCurrentProcess(), 0);
 }
